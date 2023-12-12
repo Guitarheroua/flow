@@ -8,6 +8,7 @@ option java_package = "org.onflow.protobuf.executiondata";
 import "flow/entities/block_execution_data.proto";
 import "flow/entities/event.proto";
 import "flow/entities/register.proto";
+import "flow/entities/transaction.proto";
 import "google/protobuf/timestamp.proto";
 
 // Execution Data API provides access to execution data from the Flow network
@@ -62,6 +63,9 @@ service ExecutionDataAPI {
   //   not been received.
   rpc SubscribeEvents(SubscribeEventsRequest)
       returns (stream SubscribeEventsResponse);
+
+    // SendTransaction submits a transaction to the network.
+  rpc SendAndSubscribeTransactionStatuses(SendAndSubscribeTransactionStatusesRequest) returns (SendAndSubscribeTransactionStatusesResponse);
 
   // GetRegisterValues gets the values for the given register IDs as of the given block height
   rpc GetRegisterValues(GetRegisterValuesRequest)
@@ -213,6 +217,18 @@ message EventFilter {
   // network the node is connected to. i.e. only a mainnet address is valid for
   // a mainnet node. Addresses may optionally include the 0x prefix.
   repeated string address = 3;
+}
+
+// Transactions
+
+message SendAndSubscribeTransactionStatusesRequest {
+  entities.Transaction transaction = 1;
+}
+
+message SendAndSubscribeTransactionStatusesResponse {
+  bytes id = 1;
+  entities.TransactionStatus status = 2;
+  string error_message = 3;
 }
 
 // request for GetRegisterValues

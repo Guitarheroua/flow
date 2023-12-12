@@ -28,8 +28,9 @@ type ExecutionDataAPIClient interface {
 	// - InvalidArgument is returned if the request contains an invalid block ID.
 	// - NotFound is returned if the start block or execution data are not
 	// currently available on the
-	//   node. This may happen if the block was from a previous spork, or if the
-	//   block has yet not been received.
+	//
+	//	node. This may happen if the block was from a previous spork, or if the
+	//	block has yet not been received.
 	GetExecutionDataByBlockID(ctx context.Context, in *GetExecutionDataByBlockIDRequest, opts ...grpc.CallOption) (*GetExecutionDataByBlockIDResponse, error)
 	// SubscribeExecutionData streams execution data for all blocks starting at
 	// the requested start block, up until the latest available block. Once the
@@ -41,8 +42,9 @@ type ExecutionDataAPIClient interface {
 	// block.
 	// - NotFound is returned if the start block is not currently available on the
 	// node. This may
-	//   happen if the block was from a previous spork, or if the block has yet
-	//   not been received.
+	//
+	//	happen if the block was from a previous spork, or if the block has yet
+	//	not been received.
 	SubscribeExecutionData(ctx context.Context, in *SubscribeExecutionDataRequest, opts ...grpc.CallOption) (ExecutionDataAPI_SubscribeExecutionDataClient, error)
 	// SubscribeEvents streams events for all blocks starting at the requested
 	// start block, up until the latest available block. Once the latest is
@@ -64,9 +66,12 @@ type ExecutionDataAPIClient interface {
 	// EventFilter or start block.
 	// - NotFound is returned if the start block is not currently available on the
 	// node. This may
-	//   happen if the block was from a previous spork, or if the block has yet
-	//   not been received.
+	//
+	//	happen if the block was from a previous spork, or if the block has yet
+	//	not been received.
 	SubscribeEvents(ctx context.Context, in *SubscribeEventsRequest, opts ...grpc.CallOption) (ExecutionDataAPI_SubscribeEventsClient, error)
+	// SendTransaction submits a transaction to the network.
+	SendAndSubscribeTransactionStatuses(ctx context.Context, in *SendAndSubscribeTransactionStatusesRequest, opts ...grpc.CallOption) (*SendAndSubscribeTransactionStatusesResponse, error)
 	// GetRegisterValues gets the values for the given register IDs as of the given block height
 	GetRegisterValues(ctx context.Context, in *GetRegisterValuesRequest, opts ...grpc.CallOption) (*GetRegisterValuesResponse, error)
 }
@@ -152,6 +157,15 @@ func (x *executionDataAPISubscribeEventsClient) Recv() (*SubscribeEventsResponse
 	return m, nil
 }
 
+func (c *executionDataAPIClient) SendAndSubscribeTransactionStatuses(ctx context.Context, in *SendAndSubscribeTransactionStatusesRequest, opts ...grpc.CallOption) (*SendAndSubscribeTransactionStatusesResponse, error) {
+	out := new(SendAndSubscribeTransactionStatusesResponse)
+	err := c.cc.Invoke(ctx, "/flow.executiondata.ExecutionDataAPI/SendAndSubscribeTransactionStatuses", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *executionDataAPIClient) GetRegisterValues(ctx context.Context, in *GetRegisterValuesRequest, opts ...grpc.CallOption) (*GetRegisterValuesResponse, error) {
 	out := new(GetRegisterValuesResponse)
 	err := c.cc.Invoke(ctx, "/flow.executiondata.ExecutionDataAPI/GetRegisterValues", in, out, opts...)
@@ -171,8 +185,9 @@ type ExecutionDataAPIServer interface {
 	// - InvalidArgument is returned if the request contains an invalid block ID.
 	// - NotFound is returned if the start block or execution data are not
 	// currently available on the
-	//   node. This may happen if the block was from a previous spork, or if the
-	//   block has yet not been received.
+	//
+	//	node. This may happen if the block was from a previous spork, or if the
+	//	block has yet not been received.
 	GetExecutionDataByBlockID(context.Context, *GetExecutionDataByBlockIDRequest) (*GetExecutionDataByBlockIDResponse, error)
 	// SubscribeExecutionData streams execution data for all blocks starting at
 	// the requested start block, up until the latest available block. Once the
@@ -184,8 +199,9 @@ type ExecutionDataAPIServer interface {
 	// block.
 	// - NotFound is returned if the start block is not currently available on the
 	// node. This may
-	//   happen if the block was from a previous spork, or if the block has yet
-	//   not been received.
+	//
+	//	happen if the block was from a previous spork, or if the block has yet
+	//	not been received.
 	SubscribeExecutionData(*SubscribeExecutionDataRequest, ExecutionDataAPI_SubscribeExecutionDataServer) error
 	// SubscribeEvents streams events for all blocks starting at the requested
 	// start block, up until the latest available block. Once the latest is
@@ -207,9 +223,12 @@ type ExecutionDataAPIServer interface {
 	// EventFilter or start block.
 	// - NotFound is returned if the start block is not currently available on the
 	// node. This may
-	//   happen if the block was from a previous spork, or if the block has yet
-	//   not been received.
+	//
+	//	happen if the block was from a previous spork, or if the block has yet
+	//	not been received.
 	SubscribeEvents(*SubscribeEventsRequest, ExecutionDataAPI_SubscribeEventsServer) error
+	// SendTransaction submits a transaction to the network.
+	SendAndSubscribeTransactionStatuses(context.Context, *SendAndSubscribeTransactionStatusesRequest) (*SendAndSubscribeTransactionStatusesResponse, error)
 	// GetRegisterValues gets the values for the given register IDs as of the given block height
 	GetRegisterValues(context.Context, *GetRegisterValuesRequest) (*GetRegisterValuesResponse, error)
 }
@@ -226,6 +245,9 @@ func (UnimplementedExecutionDataAPIServer) SubscribeExecutionData(*SubscribeExec
 }
 func (UnimplementedExecutionDataAPIServer) SubscribeEvents(*SubscribeEventsRequest, ExecutionDataAPI_SubscribeEventsServer) error {
 	return status.Errorf(codes.Unimplemented, "method SubscribeEvents not implemented")
+}
+func (UnimplementedExecutionDataAPIServer) SendAndSubscribeTransactionStatuses(context.Context, *SendAndSubscribeTransactionStatusesRequest) (*SendAndSubscribeTransactionStatusesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendAndSubscribeTransactionStatuses not implemented")
 }
 func (UnimplementedExecutionDataAPIServer) GetRegisterValues(context.Context, *GetRegisterValuesRequest) (*GetRegisterValuesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRegisterValues not implemented")
@@ -302,6 +324,24 @@ func (x *executionDataAPISubscribeEventsServer) Send(m *SubscribeEventsResponse)
 	return x.ServerStream.SendMsg(m)
 }
 
+func _ExecutionDataAPI_SendAndSubscribeTransactionStatuses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendAndSubscribeTransactionStatusesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExecutionDataAPIServer).SendAndSubscribeTransactionStatuses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/flow.executiondata.ExecutionDataAPI/SendAndSubscribeTransactionStatuses",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExecutionDataAPIServer).SendAndSubscribeTransactionStatuses(ctx, req.(*SendAndSubscribeTransactionStatusesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ExecutionDataAPI_GetRegisterValues_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetRegisterValuesRequest)
 	if err := dec(in); err != nil {
@@ -330,6 +370,10 @@ var ExecutionDataAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetExecutionDataByBlockID",
 			Handler:    _ExecutionDataAPI_GetExecutionDataByBlockID_Handler,
+		},
+		{
+			MethodName: "SendAndSubscribeTransactionStatuses",
+			Handler:    _ExecutionDataAPI_SendAndSubscribeTransactionStatuses_Handler,
 		},
 		{
 			MethodName: "GetRegisterValues",
