@@ -70,8 +70,8 @@ type ExecutionDataAPIClient interface {
 	//	happen if the block was from a previous spork, or if the block has yet
 	//	not been received.
 	SubscribeEvents(ctx context.Context, in *SubscribeEventsRequest, opts ...grpc.CallOption) (ExecutionDataAPI_SubscribeEventsClient, error)
-	// SendTransaction submits a transaction to the network.
-	SendAndSubscribeTransactionStatuses(ctx context.Context, in *SendAndSubscribeTransactionStatusesRequest, opts ...grpc.CallOption) (*SendAndSubscribeTransactionStatusesResponse, error)
+	// SendAndSubscribeTransactionStatuses TBD
+	SendAndSubscribeTransactionStatuses(ctx context.Context, in *SendAndSubscribeTransactionStatusesRequest, opts ...grpc.CallOption) (ExecutionDataAPI_SendAndSubscribeTransactionStatusesClient, error)
 	// GetRegisterValues gets the values for the given register IDs as of the given block height
 	GetRegisterValues(ctx context.Context, in *GetRegisterValuesRequest, opts ...grpc.CallOption) (*GetRegisterValuesResponse, error)
 }
@@ -157,13 +157,36 @@ func (x *executionDataAPISubscribeEventsClient) Recv() (*SubscribeEventsResponse
 	return m, nil
 }
 
-func (c *executionDataAPIClient) SendAndSubscribeTransactionStatuses(ctx context.Context, in *SendAndSubscribeTransactionStatusesRequest, opts ...grpc.CallOption) (*SendAndSubscribeTransactionStatusesResponse, error) {
-	out := new(SendAndSubscribeTransactionStatusesResponse)
-	err := c.cc.Invoke(ctx, "/flow.executiondata.ExecutionDataAPI/SendAndSubscribeTransactionStatuses", in, out, opts...)
+func (c *executionDataAPIClient) SendAndSubscribeTransactionStatuses(ctx context.Context, in *SendAndSubscribeTransactionStatusesRequest, opts ...grpc.CallOption) (ExecutionDataAPI_SendAndSubscribeTransactionStatusesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &ExecutionDataAPI_ServiceDesc.Streams[2], "/flow.executiondata.ExecutionDataAPI/SendAndSubscribeTransactionStatuses", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &executionDataAPISendAndSubscribeTransactionStatusesClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ExecutionDataAPI_SendAndSubscribeTransactionStatusesClient interface {
+	Recv() (*SendAndSubscribeTransactionStatusesResponse, error)
+	grpc.ClientStream
+}
+
+type executionDataAPISendAndSubscribeTransactionStatusesClient struct {
+	grpc.ClientStream
+}
+
+func (x *executionDataAPISendAndSubscribeTransactionStatusesClient) Recv() (*SendAndSubscribeTransactionStatusesResponse, error) {
+	m := new(SendAndSubscribeTransactionStatusesResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *executionDataAPIClient) GetRegisterValues(ctx context.Context, in *GetRegisterValuesRequest, opts ...grpc.CallOption) (*GetRegisterValuesResponse, error) {
@@ -227,8 +250,8 @@ type ExecutionDataAPIServer interface {
 	//	happen if the block was from a previous spork, or if the block has yet
 	//	not been received.
 	SubscribeEvents(*SubscribeEventsRequest, ExecutionDataAPI_SubscribeEventsServer) error
-	// SendTransaction submits a transaction to the network.
-	SendAndSubscribeTransactionStatuses(context.Context, *SendAndSubscribeTransactionStatusesRequest) (*SendAndSubscribeTransactionStatusesResponse, error)
+	// SendAndSubscribeTransactionStatuses TBD
+	SendAndSubscribeTransactionStatuses(*SendAndSubscribeTransactionStatusesRequest, ExecutionDataAPI_SendAndSubscribeTransactionStatusesServer) error
 	// GetRegisterValues gets the values for the given register IDs as of the given block height
 	GetRegisterValues(context.Context, *GetRegisterValuesRequest) (*GetRegisterValuesResponse, error)
 }
@@ -246,8 +269,8 @@ func (UnimplementedExecutionDataAPIServer) SubscribeExecutionData(*SubscribeExec
 func (UnimplementedExecutionDataAPIServer) SubscribeEvents(*SubscribeEventsRequest, ExecutionDataAPI_SubscribeEventsServer) error {
 	return status.Errorf(codes.Unimplemented, "method SubscribeEvents not implemented")
 }
-func (UnimplementedExecutionDataAPIServer) SendAndSubscribeTransactionStatuses(context.Context, *SendAndSubscribeTransactionStatusesRequest) (*SendAndSubscribeTransactionStatusesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendAndSubscribeTransactionStatuses not implemented")
+func (UnimplementedExecutionDataAPIServer) SendAndSubscribeTransactionStatuses(*SendAndSubscribeTransactionStatusesRequest, ExecutionDataAPI_SendAndSubscribeTransactionStatusesServer) error {
+	return status.Errorf(codes.Unimplemented, "method SendAndSubscribeTransactionStatuses not implemented")
 }
 func (UnimplementedExecutionDataAPIServer) GetRegisterValues(context.Context, *GetRegisterValuesRequest) (*GetRegisterValuesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRegisterValues not implemented")
@@ -324,22 +347,25 @@ func (x *executionDataAPISubscribeEventsServer) Send(m *SubscribeEventsResponse)
 	return x.ServerStream.SendMsg(m)
 }
 
-func _ExecutionDataAPI_SendAndSubscribeTransactionStatuses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendAndSubscribeTransactionStatusesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
+func _ExecutionDataAPI_SendAndSubscribeTransactionStatuses_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(SendAndSubscribeTransactionStatusesRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(ExecutionDataAPIServer).SendAndSubscribeTransactionStatuses(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/flow.executiondata.ExecutionDataAPI/SendAndSubscribeTransactionStatuses",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExecutionDataAPIServer).SendAndSubscribeTransactionStatuses(ctx, req.(*SendAndSubscribeTransactionStatusesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(ExecutionDataAPIServer).SendAndSubscribeTransactionStatuses(m, &executionDataAPISendAndSubscribeTransactionStatusesServer{stream})
+}
+
+type ExecutionDataAPI_SendAndSubscribeTransactionStatusesServer interface {
+	Send(*SendAndSubscribeTransactionStatusesResponse) error
+	grpc.ServerStream
+}
+
+type executionDataAPISendAndSubscribeTransactionStatusesServer struct {
+	grpc.ServerStream
+}
+
+func (x *executionDataAPISendAndSubscribeTransactionStatusesServer) Send(m *SendAndSubscribeTransactionStatusesResponse) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 func _ExecutionDataAPI_GetRegisterValues_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -372,10 +398,6 @@ var ExecutionDataAPI_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ExecutionDataAPI_GetExecutionDataByBlockID_Handler,
 		},
 		{
-			MethodName: "SendAndSubscribeTransactionStatuses",
-			Handler:    _ExecutionDataAPI_SendAndSubscribeTransactionStatuses_Handler,
-		},
-		{
 			MethodName: "GetRegisterValues",
 			Handler:    _ExecutionDataAPI_GetRegisterValues_Handler,
 		},
@@ -389,6 +411,11 @@ var ExecutionDataAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "SubscribeEvents",
 			Handler:       _ExecutionDataAPI_SubscribeEvents_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "SendAndSubscribeTransactionStatuses",
+			Handler:       _ExecutionDataAPI_SendAndSubscribeTransactionStatuses_Handler,
 			ServerStreams: true,
 		},
 	},

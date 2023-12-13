@@ -65,7 +65,8 @@ service ExecutionDataAPI {
       returns (stream SubscribeEventsResponse);
 
   // SendAndSubscribeTransactionStatuses TBD
-  rpc SendAndSubscribeTransactionStatuses(SendAndSubscribeTransactionStatusesRequest) returns (stream SendAndSubscribeTransactionStatusesResponse);
+  rpc SendAndSubscribeTransactionStatuses(SendAndSubscribeTransactionStatusesRequest)
+      returns (stream SendAndSubscribeTransactionStatusesResponse);
 
   // GetRegisterValues gets the values for the given register IDs as of the given block height
   rpc GetRegisterValues(GetRegisterValuesRequest)
